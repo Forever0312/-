@@ -36,14 +36,23 @@
   /* ---------- 顶部 ---------- */
   .top {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 20px; gap: 10px;
   }
-  .date { font-size: 14px; color: var(--muted); letter-spacing: .3px; }
+  .date { font-size: 14px; color: var(--muted); letter-spacing: .3px; flex: 1; min-width: 0; }
+  .top-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
   .streak {
     font-size: 13px; background: var(--card2); border: 1px solid var(--border);
     padding: 6px 13px; border-radius: 999px; white-space: nowrap;
   }
   .streak.zero { color: var(--muted); }
+  .settings-btn {
+    background: var(--card2); border: 1px solid var(--border); color: var(--text);
+    width: 36px; height: 36px; border-radius: 12px; cursor: pointer;
+    font-size: 17px; line-height: 1; display: flex; align-items: center;
+    justify-content: center; transition: border-color .2s, transform .15s;
+  }
+  .settings-btn:hover { border-color: var(--accent); }
+  .settings-btn:active { transform: scale(.94); }
 
   /* ---------- 进度卡 ---------- */
   .hero {
@@ -67,7 +76,7 @@
 
   .hero-info { flex: 1; min-width: 0; }
   .nudge { font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
-  .stats { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+  .stats { display: flex; gap: 16px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
   .stats b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 
   /* ---------- 输入 ---------- */
@@ -164,6 +173,126 @@
     font-family: inherit; cursor: pointer; transition: border-color .2s;
   }
   .timer-actions button:hover { border-color: #3a4351; }
+
+  /* ---------- 设置面板 ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,.6);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+  .modal {
+    background: var(--card); border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 22px 22px 0 0;
+    width: 100%; max-width: 520px;
+    padding: 14px 20px calc(28px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform .32s cubic-bezier(.34,1.25,.64,1);
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+
+  .modal-handle {
+    width: 40px; height: 4px; border-radius: 2px;
+    background: #333b48; margin: 0 auto 18px;
+  }
+  .modal-title {
+    font-size: 18px; font-weight: 600; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-close {
+    background: transparent; border: none; color: var(--muted);
+    font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1;
+    transition: color .2s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .setting-block { margin-bottom: 24px; }
+  .setting-label {
+    font-size: 13px; color: var(--muted); margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .setting-label b {
+    color: var(--accent); font-size: 14px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stepper {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 14px; padding: 6px;
+  }
+  .stepper button {
+    width: 44px; height: 44px; flex: 0 0 auto;
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 11px;
+    font-size: 22px; font-weight: 300; line-height: 1;
+    cursor: pointer; transition: all .15s;
+  }
+  .stepper button:hover { border-color: var(--accent); color: var(--accent); }
+  .stepper button:active { transform: scale(.93); }
+  .stepper input {
+    flex: 1; min-width: 0; background: transparent; border: none;
+    color: var(--text); font-size: 22px; font-weight: 600;
+    text-align: center; font-family: inherit; outline: none;
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-outer-spin-button,
+  .stepper input::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  .stepper .unit { color: var(--muted); font-size: 14px; padding-right: 14px; }
+
+  .presets { display: flex; gap: 8px; margin-top: 10px; }
+  .presets button {
+    flex: 1; background: var(--bg); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 11px; padding: 11px 4px;
+    font-size: 13px; font-family: inherit; cursor: pointer;
+    transition: all .18s;
+  }
+  .presets button:hover { border-color: #3a4351; color: var(--text); }
+  .presets button.active {
+    background: var(--accent-soft); border-color: var(--accent);
+    color: var(--accent); font-weight: 600;
+  }
+
+  .switch-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0;
+  }
+  .switch-row span { font-size: 15px; }
+  .switch {
+    position: relative; width: 48px; height: 28px; flex: 0 0 auto;
+    background: #2a323e; border-radius: 999px; border: none;
+    cursor: pointer; transition: background .22s;
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #8a93a3; transition: transform .22s, background .22s;
+  }
+  .switch.on { background: var(--accent); }
+  .switch.on::after { transform: translateX(20px); background: #fff; }
+
+  .divider { height: 1px; background: var(--border); margin: 4px 0 18px; }
+
+  .save-btn {
+    width: 100%; background: var(--accent); color: #fff;
+    border: none; border-radius: 14px; padding: 15px;
+    font-size: 15px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: filter .2s, transform .1s;
+  }
+  .save-btn:hover { filter: brightness(1.08); }
+  .save-btn:active { transform: scale(.98); }
+
+  .hint {
+    font-size: 12px; color: var(--muted); text-align: center;
+    margin-top: 14px; line-height: 1.6;
+  }
 </style>
 </head>
 <body>
@@ -171,7 +300,10 @@
 <div class="app">
   <div class="top">
     <div class="date" id="dateLabel"></div>
-    <div class="streak" id="streakLabel">🔥 0 天</div>
+    <div class="top-right">
+      <div class="streak" id="streakLabel">🔥 0 天</div>
+      <button class="settings-btn" id="settingsBtn" aria-label="设置">⚙</button>
+    </div>
   </div>
 
   <section class="hero">
@@ -201,6 +333,7 @@
   <ul class="tasks" id="taskList"></ul>
 </div>
 
+<!-- 计时条 -->
 <div class="timer-bar" id="timerBar">
   <div class="timer-progress"><div id="timerProgress"></div></div>
   <div class="timer-inner">
@@ -213,13 +346,55 @@
   </div>
 </div>
 
+<!-- 设置面板 -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" role="dialog" aria-label="设置">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span>设置</span>
+      <button class="modal-close" id="settingsClose" aria-label="关闭">✕</button>
+    </div>
+
+    <div class="setting-block">
+      <div class="setting-label">
+        <span>专注时长</span>
+        <b id="focusPreview">25 分钟</b>
+      </div>
+      <div class="stepper">
+        <button type="button" id="focusMinus" aria-label="减少">−</button>
+        <input type="number" id="focusInput" min="1" max="180" value="25" inputmode="numeric">
+        <span class="unit">分钟</span>
+        <button type="button" id="focusPlus" aria-label="增加">+</button>
+      </div>
+      <div class="presets" id="presetRow">
+        <button type="button" data-min="15">15</button>
+        <button type="button" data-min="25">25</button>
+        <button type="button" data-min="45">45</button>
+        <button type="button" data-min="60">60</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="switch-row">
+      <span>结束时提示音</span>
+      <button class="switch" id="soundSwitch" aria-label="提示音开关"></button>
+    </div>
+
+    <button class="save-btn" id="settingsSave">完成</button>
+    <p class="hint">修改立即生效，下次打开还记得你的设置。<br>计时进行中不会受影响。</p>
+  </div>
+</div>
+
 <script>
 (function () {
   'use strict';
 
-  const KEY = 'nudge_v1';
-  const FOCUS_MINUTES = 25;
+  const KEY = 'nudge_v2';
   const RING_C = 2 * Math.PI * 52;
+  const DEFAULT_SETTINGS = { focusMinutes: 25, soundEnabled: true };
+  const MIN_MINUTES = 1;
+  const MAX_MINUTES = 180;
 
   const $ = (s) => document.querySelector(s);
 
@@ -248,6 +423,12 @@
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
+  function clamp(n, min, max) {
+    n = Math.round(Number(n));
+    if (!isFinite(n)) return min;
+    return Math.min(max, Math.max(min, n));
+  }
+
   /* ================= 状态 ================= */
 
   let state = load();
@@ -263,10 +444,15 @@
         s.focusLog = s.focusLog || {};
         s.streak = s.streak || 0;
         s.lastCompleteDate = s.lastCompleteDate || null;
+        s.settings = Object.assign({}, DEFAULT_SETTINGS, s.settings || {});
+        s.settings.focusMinutes = clamp(s.settings.focusMinutes, MIN_MINUTES, MAX_MINUTES);
         return s;
       }
-    } catch (e) { /* 忽略损坏的数据 */ }
-    return { tasks: [], focusLog: {}, streak: 0, lastCompleteDate: null };
+    } catch (e) { /* 忽略损坏数据 */ }
+    return {
+      tasks: [], focusLog: {}, streak: 0, lastCompleteDate: null,
+      settings: Object.assign({}, DEFAULT_SETTINGS)
+    };
   }
 
   function save() {
@@ -304,17 +490,12 @@
   /* ================= 督促文案 ================= */
 
   function pickNudge() {
-    const t = todayStr();
     const done = doneTodayCount();
     const pending = pendingTasks();
     const hour = new Date().getHours();
 
-    if (timer && !timer.paused) {
-      return '专注中。别切窗口，别摸手机。';
-    }
-    if (timer && timer.paused) {
-      return '计时暂停了。要么继续，要么干脆放弃。';
-    }
+    if (timer && !timer.paused) return '专注中。别切窗口，别摸手机。';
+    if (timer && timer.paused) return '计时暂停了。要么继续，要么干脆放弃。';
 
     const stale = pending
       .filter((x) => Date.now() - x.createdAt > 2 * 86400000)
@@ -324,12 +505,9 @@
       return '「' + stale.text + '」已经躺了 ' + days + ' 天，今天处理掉它？';
     }
 
-    if (pending.length === 0 && done === 0) {
-      return '清单是空的。写下今天最重要的一件事。';
-    }
-    if (pending.length === 0) {
-      return '今天清空了。保持住。';
-    }
+    if (pending.length === 0 && done === 0) return '清单是空的。写下今天最重要的一件事。';
+    if (pending.length === 0) return '今天清空了。保持住。';
+
     if (done === 0) {
       if (hour >= 21) return '快十点了，今天还什么都没做。挑最小的一件，5 分钟。';
       if (hour >= 18) return '天黑了，还没动。现在开始也来得及。';
@@ -415,11 +593,18 @@
     return Math.max(0, Math.ceil((timer.endsAt - Date.now()) / 1000));
   }
 
-  function startTimer(taskId) {
+  function startTimer(taskId, minutesOverride) {
+    const minutes = clamp(
+      minutesOverride != null ? minutesOverride : state.settings.focusMinutes,
+      MIN_MINUTES, MAX_MINUTES
+    );
+    const seconds = minutes * 60;
+
     timer = {
       taskId: taskId,
-      duration: FOCUS_MINUTES * 60,
-      endsAt: Date.now() + FOCUS_MINUTES * 60 * 1000,
+      duration: seconds,
+      focusMinutes: minutes,
+      endsAt: Date.now() + seconds * 1000,
       paused: false,
       remaining: 0
     };
@@ -451,6 +636,7 @@
     if (!timer) return;
     const taskId = timer.taskId;
     const duration = timer.duration;
+    const soundOn = state.settings.soundEnabled;
 
     timer = null;
     stopTick();
@@ -464,7 +650,7 @@
     render();
 
     if (!silent) {
-      beep();
+      if (soundOn) beep();
       notify('专注结束', '起来走两步，或者继续下一个。');
     }
   }
@@ -626,6 +812,85 @@
     startTimer(id);
   }
 
+  /* ================= 设置面板 ================= */
+
+  const settingsModal = $('#settingsModal');
+  const focusInput = $('#focusInput');
+  const focusPreview = $('#focusPreview');
+  const soundSwitch = $('#soundSwitch');
+  const presetRow = $('#presetRow');
+  let draftSound = false;
+
+  function openSettings() {
+    focusInput.value = state.settings.focusMinutes;
+    focusPreview.textContent = state.settings.focusMinutes + ' 分钟';
+    draftSound = state.settings.soundEnabled;
+    soundSwitch.classList.toggle('on', draftSound);
+    highlightPreset();
+    settingsModal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSettings() {
+    settingsModal.classList.remove('show');
+    document.body.style.overflow = '';
+    // 数字输入里若有未保存的改动，恢复为当前设置
+    focusInput.value = state.settings.focusMinutes;
+    focusPreview.textContent = state.settings.focusMinutes + ' 分钟';
+    highlightPreset();
+  }
+
+  function highlightPreset() {
+    const val = clamp(focusInput.value, MIN_MINUTES, MAX_MINUTES);
+    presetRow.querySelectorAll('button').forEach((b) => {
+      b.classList.toggle('active', Number(b.dataset.min) === val);
+    });
+  }
+
+  function setFocusValue(v) {
+    const n = clamp(v, MIN_MINUTES, MAX_MINUTES);
+    focusInput.value = n;
+    focusPreview.textContent = n + ' 分钟';
+    highlightPreset();
+  }
+
+  function saveSettings() {
+    state.settings.focusMinutes = clamp(focusInput.value, MIN_MINUTES, MAX_MINUTES);
+    state.settings.soundEnabled = draftSound;
+    save();
+    closeSettings();
+    render();
+  }
+
+  $('#focusMinus').addEventListener('click', () => setFocusValue(Number(focusInput.value) - 1));
+  $('#focusPlus').addEventListener('click', () => setFocusValue(Number(focusInput.value) + 1));
+
+  focusInput.addEventListener('input', () => {
+    focusPreview.textContent = clamp(focusInput.value, MIN_MINUTES, MAX_MINUTES) + ' 分钟';
+    highlightPreset();
+  });
+  focusInput.addEventListener('blur', () => {
+    setFocusValue(focusInput.value);
+  });
+
+  presetRow.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-min]');
+    if (!btn) return;
+    setFocusValue(btn.dataset.min);
+  });
+
+  soundSwitch.addEventListener('click', () => {
+    draftSound = !draftSound;
+    soundSwitch.classList.toggle('on', draftSound);
+  });
+
+  $('#settingsBtn').addEventListener('click', openSettings);
+  $('#settingsClose').addEventListener('click', closeSettings);
+  $('#settingsSave').addEventListener('click', saveSettings);
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettings();
+  });
+
   /* ================= 事件绑定 ================= */
 
   $('#addBtn').addEventListener('click', addTask);
@@ -671,13 +936,11 @@
 
     render();
 
-    // 每分钟刷新一次文案和日期
     setInterval(() => {
       if (!timer) render();
       else renderTimer();
     }, 60000);
 
-    // 每 5 分钟保存一次，防止异常关闭丢数据
     setInterval(save, 300000);
   }
 
