@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>别偷懒</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0e1014;
+    --card: #161a21;
+    --card2: #1c212a;
+    --border: #262d38;
+    --text: #e7eaef;
+    --muted: #8a93a3;
+    --accent: #ff6b47;
+    --accent-soft: rgba(255, 107, 71, 0.12);
+    --green: #3ddc97;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    padding: 26px 16px 150px;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .app { max-width: 520px; margin: 0 auto; }
+
+  /* ---------- 顶部 ---------- */
+  .top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .date { font-size: 14px; color: var(--muted); letter-spacing: .3px; }
+  .streak {
+    font-size: 13px; background: var(--card2); border: 1px solid var(--border);
+    padding: 6px 13px; border-radius: 999px; white-space: nowrap;
+  }
+  .streak.zero { color: var(--muted); }
+
+  /* ---------- 进度卡 ---------- */
+  .hero {
+    display: flex; align-items: center; gap: 20px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 20px; margin-bottom: 14px;
+  }
+  .ring-wrap { position: relative; width: 100px; height: 100px; flex: 0 0 auto; }
+  .ring { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+  .ring-bg { fill: none; stroke: #232a35; stroke-width: 9; }
+  .ring-fg {
+    fill: none; stroke: var(--accent); stroke-width: 9; stroke-linecap: round;
+    transition: stroke-dashoffset .55s cubic-bezier(.4,0,.2,1);
+  }
+  .ring-center {
+    position: absolute; inset: 0; display: flex; align-items: baseline;
+    justify-content: center; padding-top: 34px;
+    font-size: 26px; font-weight: 600; letter-spacing: -.5px;
+  }
+  .ring-center small { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 1px; }
+
+  .hero-info { flex: 1; min-width: 0; }
+  .nudge { font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
+  .stats { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ---------- 输入 ---------- */
+  .add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .add-row input {
+    flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px; color: var(--text);
+    font-size: 15px; font-family: inherit; outline: none;
+    transition: border-color .2s;
+  }
+  .add-row input:focus { border-color: var(--accent); }
+  .add-row input::placeholder { color: #5a6272; }
+  .add-row button {
+    width: 52px; flex: 0 0 auto; background: var(--accent); color: #fff;
+    border: none; border-radius: 14px; font-size: 24px; font-weight: 300;
+    cursor: pointer; line-height: 1; transition: transform .1s, filter .2s;
+  }
+  .add-row button:hover { filter: brightness(1.1); }
+  .add-row button:active { transform: scale(.95); }
+
+  /* ---------- 任务列表 ---------- */
+  .tasks { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .empty {
+    text-align: center; color: var(--muted); font-size: 14px;
+    padding: 36px 16px; border: 1px dashed var(--border); border-radius: 14px;
+  }
+  .task {
+    display: flex; align-items: center; gap: 11px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px 13px 13px 15px;
+    transition: opacity .25s, border-color .25s;
+  }
+  .task.done { opacity: .42; }
+  .task.done .task-text { text-decoration: line-through; text-decoration-color: var(--muted); }
+
+  .check {
+    width: 22px; height: 22px; flex: 0 0 auto; border-radius: 50%;
+    border: 1.5px solid #3a4351; background: transparent; color: transparent;
+    font-size: 12px; line-height: 1; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+  }
+  .check:hover { border-color: var(--green); }
+  .task.done .check { background: var(--green); border-color: var(--green); color: #0e1014; }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-text { font-size: 15px; line-height: 1.45; word-break: break-word; }
+  .task-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .task-meta.warn { color: var(--accent); }
+
+  .icon-btn {
+    flex: 0 0 auto; border: none; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s, color .2s;
+  }
+  .play {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent); font-size: 11px;
+  }
+  .play:hover { background: rgba(255,107,71,.22); }
+  .del {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: transparent; color: #4a515e; font-size: 15px;
+  }
+  .del:hover { color: var(--accent); background: var(--accent-soft); }
+
+  /* ---------- 计时条 ---------- */
+  .timer-bar {
+    position: fixed; left: 50%; bottom: 20px;
+    width: min(520px, calc(100% - 32px));
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 18px; overflow: hidden;
+    box-shadow: 0 16px 44px rgba(0,0,0,.55);
+    transform: translate(-50%, 140%); opacity: 0;
+    transition: transform .38s cubic-bezier(.34,1.25,.64,1), opacity .28s;
+    z-index: 100;
+  }
+  .timer-bar.show { transform: translate(-50%, 0); opacity: 1; }
+  .timer-progress { height: 3px; background: #232a35; }
+  .timer-progress > div { height: 100%; width: 0; background: var(--accent); transition: width .25s linear; }
+  .timer-inner { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .timer-time {
+    font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums;
+    letter-spacing: .5px; flex: 0 0 auto;
+  }
+  .timer-task {
+    flex: 1; min-width: 0; font-size: 13px; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .timer-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+  .timer-actions button {
+    background: transparent; border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 7px 12px; font-size: 12px;
+    font-family: inherit; cursor: pointer; transition: border-color .2s;
+  }
+  .timer-actions button:hover { border-color: #3a4351; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="top">
+    <div class="date" id="dateLabel"></div>
+    <div class="streak" id="streakLabel">🔥 0 天</div>
+  </div>
+
+  <section class="hero">
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+        <circle class="ring-fg" id="ringFg" cx="60" cy="60" r="52"></circle>
+      </svg>
+      <div class="ring-center">
+        <span id="heroDone">0</span><small>/<span id="heroTotal">0</span></small>
+      </div>
+    </div>
+    <div class="hero-info">
+      <p class="nudge" id="nudge">写下今天最重要的一件事。</p>
+      <div class="stats">
+        <span>专注 <b id="focusMin">0</b> 分钟</span>
+        <span>连续 <b id="streakNum">0</b> 天</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="add-row">
+    <input id="taskInput" type="text" placeholder="现在要做什么？" maxlength="80" autocomplete="off">
+    <button id="addBtn" aria-label="添加">+</button>
+  </div>
+
+  <ul class="tasks" id="taskList"></ul>
+</div>
+
+<div class="timer-bar" id="timerBar">
+  <div class="timer-progress"><div id="timerProgress"></div></div>
+  <div class="timer-inner">
+    <div class="timer-time" id="timerTime">25:00</div>
+    <div class="timer-task" id="timerTask"></div>
+    <div class="timer-actions">
+      <button id="timerPause">暂停</button>
+      <button id="timerStop">放弃</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const KEY = 'nudge_v1';
+  const FOCUS_MINUTES = 25;
+  const RING_C = 2 * Math.PI * 52;
+
+  const $ = (s) => document.querySelector(s);
+
+  /* ================= 工具 ================= */
+
+  function todayStr(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  function yesterdayStr() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return todayStr(d);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* ================= 状态 ================= */
+
+  let state = load();
+  let timer = state.timer || null;
+  let tickHandle = null;
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        s.tasks = Array.isArray(s.tasks) ? s.tasks : [];
+        s.focusLog = s.focusLog || {};
+        s.streak = s.streak || 0;
+        s.lastCompleteDate = s.lastCompleteDate || null;
+        return s;
+      }
+    } catch (e) { /* 忽略损坏的数据 */ }
+    return { tasks: [], focusLog: {}, streak: 0, lastCompleteDate: null };
+  }
+
+  function save() {
+    state.timer = timer;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  /* ================= 统计 ================= */
+
+  function doneTodayCount() {
+    const t = todayStr();
+    return state.tasks.filter((x) => x.doneDate === t).length;
+  }
+
+  function pendingTasks() {
+    return state.tasks.filter((x) => !x.done);
+  }
+
+  function refreshStreak() {
+    const t = todayStr(), y = yesterdayStr();
+    if (state.lastCompleteDate !== t && state.lastCompleteDate !== y) {
+      state.streak = 0;
+    }
+  }
+
+  function bumpStreak() {
+    const t = todayStr();
+    if (state.lastCompleteDate === t) return;
+    state.streak = state.lastCompleteDate === yesterdayStr()
+      ? (state.streak || 0) + 1
+      : 1;
+    state.lastCompleteDate = t;
+  }
+
+  /* ================= 督促文案 ================= */
+
+  function pickNudge() {
+    const t = todayStr();
+    const done = doneTodayCount();
+    const pending = pendingTasks();
+    const hour = new Date().getHours();
+
+    if (timer && !timer.paused) {
+      return '专注中。别切窗口，别摸手机。';
+    }
+    if (timer && timer.paused) {
+      return '计时暂停了。要么继续，要么干脆放弃。';
+    }
+
+    const stale = pending
+      .filter((x) => Date.now() - x.createdAt > 2 * 86400000)
+      .sort((a, b) => a.createdAt - b.createdAt)[0];
+    if (stale) {
+      const days = Math.floor((Date.now() - stale.createdAt) / 86400000);
+      return '「' + stale.text + '」已经躺了 ' + days + ' 天，今天处理掉它？';
+    }
+
+    if (pending.length === 0 && done === 0) {
+      return '清单是空的。写下今天最重要的一件事。';
+    }
+    if (pending.length === 0) {
+      return '今天清空了。保持住。';
+    }
+    if (done === 0) {
+      if (hour >= 21) return '快十点了，今天还什么都没做。挑最小的一件，5 分钟。';
+      if (hour >= 18) return '天黑了，还没动。现在开始也来得及。';
+      if (hour >= 13) return '下午了。先做 5 分钟，剩下的自然会跟上。';
+      return '从最小的一件开始，别想太多。';
+    }
+    if (pending.length === 1) return '只剩 1 件了，收个尾。';
+    return '还剩 ' + pending.length + ' 件。别停在这里。';
+  }
+
+  /* ================= 渲染 ================= */
+
+  function render() {
+    const d = new Date();
+    const week = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
+    $('#dateLabel').textContent =
+      (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + week;
+
+    const t = todayStr();
+    const done = doneTodayCount();
+    const total = done + pendingTasks().length;
+
+    $('#heroDone').textContent = done;
+    $('#heroTotal').textContent = total;
+
+    const pct = total ? done / total : 0;
+    const ring = $('#ringFg');
+    ring.style.strokeDasharray = RING_C;
+    ring.style.strokeDashoffset = RING_C * (1 - pct);
+
+    $('#streakNum').textContent = state.streak || 0;
+    $('#focusMin').textContent = Math.round((state.focusLog[t] || 0) / 60);
+
+    const streakEl = $('#streakLabel');
+    streakEl.textContent = '🔥 ' + (state.streak || 0) + ' 天';
+    streakEl.classList.toggle('zero', !state.streak);
+
+    $('#nudge').textContent = pickNudge();
+
+    renderTasks();
+    renderTimer();
+  }
+
+  function renderTasks() {
+    const list = $('#taskList');
+    const sorted = state.tasks.slice().sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return a.createdAt - b.createdAt;
+    });
+
+    if (!sorted.length) {
+      list.innerHTML = '<li class="empty">还没有任务。写下第一件要做的事。</li>';
+      return;
+    }
+
+    list.innerHTML = sorted.map((task) => {
+      const days = Math.floor((Date.now() - task.createdAt) / 86400000);
+      let meta = '';
+      if (!task.done && days >= 1) {
+        meta = '<div class="task-meta warn">已经挂了 ' + days + ' 天</div>';
+      } else if (task.sessions) {
+        meta = '<div class="task-meta">🍅 × ' + task.sessions + '</div>';
+      }
+
+      return '' +
+        '<li class="task' + (task.done ? ' done' : '') + '" data-id="' + task.id + '">' +
+          '<button class="check icon-btn" data-act="toggle" aria-label="完成">✓</button>' +
+          '<div class="task-body">' +
+            '<div class="task-text">' + esc(task.text) + '</div>' +
+            meta +
+          '</div>' +
+          (task.done ? '' : '<button class="play icon-btn" data-act="start" aria-label="开始专注">▶</button>') +
+          '<button class="del icon-btn" data-act="del" aria-label="删除">✕</button>' +
+        '</li>';
+    }).join('');
+  }
+
+  /* ================= 计时器 ================= */
+
+  function timerRemaining() {
+    if (!timer) return 0;
+    if (timer.paused) return timer.remaining;
+    return Math.max(0, Math.ceil((timer.endsAt - Date.now()) / 1000));
+  }
+
+  function startTimer(taskId) {
+    timer = {
+      taskId: taskId,
+      duration: FOCUS_MINUTES * 60,
+      endsAt: Date.now() + FOCUS_MINUTES * 60 * 1000,
+      paused: false,
+      remaining: 0
+    };
+    save();
+    tickLoop();
+    render();
+    requestNotifyPermission();
+  }
+
+  function tickLoop() {
+    if (!tickHandle) tickHandle = setInterval(tick, 200);
+    tick();
+  }
+
+  function stopTick() {
+    if (tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+  }
+
+  function tick() {
+    if (!timer) { stopTick(); return; }
+    if (!timer.paused && Date.now() >= timer.endsAt) {
+      completeTimer(false);
+      return;
+    }
+    renderTimer();
+  }
+
+  function completeTimer(silent) {
+    if (!timer) return;
+    const taskId = timer.taskId;
+    const duration = timer.duration;
+
+    timer = null;
+    stopTick();
+
+    const t = todayStr();
+    state.focusLog[t] = (state.focusLog[t] || 0) + duration;
+    const task = state.tasks.find((x) => x.id === taskId);
+    if (task) task.sessions = (task.sessions || 0) + 1;
+
+    save();
+    render();
+
+    if (!silent) {
+      beep();
+      notify('专注结束', '起来走两步，或者继续下一个。');
+    }
+  }
+
+  function togglePause() {
+    if (!timer) return;
+    if (timer.paused) {
+      timer.endsAt = Date.now() + timer.remaining * 1000;
+      timer.paused = false;
+      timer.remaining = 0;
+      tickLoop();
+    } else {
+      timer.remaining = timerRemaining();
+      timer.paused = true;
+      stopTick();
+    }
+    save();
+    renderTimer();
+    render();
+  }
+
+  function abandonTimer() {
+    if (!timer) return;
+    if (!confirm('放弃这次专注？进度不会记录。')) return;
+    timer = null;
+    stopTick();
+    save();
+    render();
+  }
+
+  function renderTimer() {
+    const bar = $('#timerBar');
+    if (!timer) {
+      bar.classList.remove('show');
+      document.title = '别偷懒';
+      return;
+    }
+
+    bar.classList.add('show');
+
+    const left = timerRemaining();
+    const m = Math.floor(left / 60);
+    const s = left % 60;
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+
+    $('#timerTime').textContent = mm + ':' + ss;
+    $('#timerPause').textContent = timer.paused ? '继续' : '暂停';
+
+    const task = state.tasks.find((x) => x.id === timer.taskId);
+    const label = task ? task.text : '专注中';
+    $('#timerTask').textContent = label;
+
+    const progress = 1 - left / timer.duration;
+    $('#timerProgress').style.width = Math.min(100, Math.max(0, progress * 100)) + '%';
+
+    document.title = mm + ':' + ss + ' · ' + label;
+  }
+
+  /* ================= 声音 & 通知 ================= */
+
+  function beep() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      [0, 0.28].forEach((delay) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        const t0 = ctx.currentTime + delay;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(0.28, t0 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+        osc.start(t0);
+        osc.stop(t0 + 0.25);
+      });
+      setTimeout(() => ctx.close(), 1200);
+    } catch (e) {}
+  }
+
+  function requestNotifyPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }
+
+  function notify(title, body) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    try { new Notification(title, { body: body }); } catch (e) {}
+  }
+
+  /* ================= 任务操作 ================= */
+
+  function addTask() {
+    const input = $('#taskInput');
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+
+    state.tasks.push({
+      id: uid(),
+      text: text,
+      done: false,
+      doneDate: null,
+      createdAt: Date.now(),
+      sessions: 0
+    });
+
+    input.value = '';
+    save();
+    render();
+    input.focus();
+  }
+
+  function toggleTask(id) {
+    const task = state.tasks.find((x) => x.id === id);
+    if (!task) return;
+
+    if (task.done) {
+      task.done = false;
+      task.doneDate = null;
+    } else {
+      task.done = true;
+      task.doneDate = todayStr();
+      bumpStreak();
+    }
+
+    save();
+    render();
+  }
+
+  function deleteTask(id) {
+    const task = state.tasks.find((x) => x.id === id);
+    if (!task) return;
+    if (!confirm('删除「' + task.text + '」？')) return;
+
+    if (timer && timer.taskId === id) {
+      timer = null;
+      stopTick();
+    }
+
+    state.tasks = state.tasks.filter((x) => x.id !== id);
+    save();
+    render();
+  }
+
+  function playTask(id) {
+    if (timer) {
+      if (timer.taskId === id) return;
+      if (!confirm('正在专注另一个任务，放弃并切换？')) return;
+      timer = null;
+      stopTick();
+    }
+    startTimer(id);
+  }
+
+  /* ================= 事件绑定 ================= */
+
+  $('#addBtn').addEventListener('click', addTask);
+
+  $('#taskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  $('#taskList').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const li = btn.closest('.task');
+    if (!li) return;
+    const id = li.dataset.id;
+    const act = btn.dataset.act;
+
+    if (act === 'toggle') toggleTask(id);
+    else if (act === 'start') playTask(id);
+    else if (act === 'del') deleteTask(id);
+  });
+
+  $('#timerPause').addEventListener('click', togglePause);
+  $('#timerStop').addEventListener('click', abandonTimer);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) render();
+  });
+
+  /* ================= 启动 ================= */
+
+  function init() {
+    refreshStreak();
+
+    if (timer) {
+      if (timer.paused) {
+        renderTimer();
+      } else if (Date.now() >= timer.endsAt) {
+        completeTimer(true);
+      } else {
+        tickLoop();
+      }
+    }
+
+    render();
+
+    // 每分钟刷新一次文案和日期
+    setInterval(() => {
+      if (!timer) render();
+      else renderTimer();
+    }, 60000);
+
+    // 每 5 分钟保存一次，防止异常关闭丢数据
+    setInterval(save, 300000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
